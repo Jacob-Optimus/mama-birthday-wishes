@@ -1,0 +1,17 @@
+(function(){
+'use strict';
+var pages=document.querySelectorAll('.page');
+function show(id){pages.forEach(function(p){var active=p.id===id;p.hidden=!active;p.classList.toggle('active',active)});window.scrollTo(0,0);var heading=document.querySelector('#'+id+' h1, #'+id+' h2');heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});}
+document.getElementById('unseal').addEventListener('click',function(){var card=document.getElementById('card');if(card.classList.contains('unsealing'))return;card.classList.add('unsealing');var delay=window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:650;setTimeout(function(){card.classList.add('opened');card.classList.remove('unsealing');show('cover')},delay)});
+document.getElementById('open').addEventListener('click',function(){show('letter')});
+document.getElementById('wish').addEventListener('click',function(){show('wishes')});
+document.querySelectorAll('[data-back]').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.back)})});
+var clearTimer;
+document.getElementById('celebrate').addEventListener('click',function(){document.getElementById('wish-copy').innerHTML='<h3>妈妈，生日快乐！</h3><p>愿您健康又富贵，美丽又自在。<br>年年有今日，岁岁都被宠爱。</p>';this.innerHTML='再下一场金色祝福 <span aria-hidden="true">♡</span>';var box=document.getElementById('confetti');box.innerHTML='';clearTimeout(clearTimer);if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){for(var i=0;i<52;i++){var p=document.createElement('i');p.className='piece';p.style.left=Math.random()*100+'%';p.style.background=['#f3cb65','#fff3bd','#d7dfe4','#b98029'][i%4];p.style.animationDelay=Math.random()*.7+'s';p.style.setProperty('--drift',(Math.random()-.5)*180+'px');box.appendChild(p)}clearTimer=setTimeout(function(){box.innerHTML=''},4600)}});
+// An original, quiet music-box phrase. Starts only after an explicit tap.
+var ctx=null,timer=null,playing=false,voices=[];var sound=document.getElementById('sound');
+function phrase(){if(!ctx||!playing)return;var notes=[523.25,659.25,783.99,659.25,587.33,698.46,880,783.99,659.25,587.33,523.25,392,440,523.25,587.33,523.25];notes.forEach(function(freq,i){var osc=ctx.createOscillator(),gain=ctx.createGain(),at=ctx.currentTime+i*.48;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.09,at+.015);gain.gain.exponentialRampToValueAtTime(.001,at+.9);osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+1);voices.push(osc);osc.onended=function(){var k=voices.indexOf(osc);if(k>=0)voices.splice(k,1);osc.disconnect();gain.disconnect()}});timer=setTimeout(phrase,8500)}
+function stop(){playing=false;clearTimeout(timer);voices.slice().forEach(function(o){try{o.stop()}catch(e){}});voices=[];sound.setAttribute('aria-pressed','false');sound.setAttribute('aria-label','播放音乐');sound.querySelector('span').textContent='音乐'}
+sound.addEventListener('click',function(){if(playing){stop();return}try{var Audio=window.AudioContext||window.webkitAudioContext;if(!Audio){sound.querySelector('span').textContent='暂不可用';return}ctx=ctx||new Audio();ctx.resume().then(function(){playing=true;sound.setAttribute('aria-pressed','true');sound.setAttribute('aria-label','暂停音乐');sound.querySelector('span').textContent='暂停';phrase()}).catch(function(){stop()})}catch(e){stop()}});
+document.addEventListener('visibilitychange',function(){if(document.hidden)stop()});
+})();
